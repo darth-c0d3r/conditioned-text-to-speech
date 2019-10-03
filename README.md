@@ -13,9 +13,10 @@ We aim to implement a Neural Network system for generating the speech correspond
 ### Text to Speech Papers
 1. [Tacotron 2 (Blog)](https://ai.googleblog.com/2017/12/tacotron-2-generating-human-like-speech.html)
 2. [Tacotron 2 (Paper)](https://arxiv.org/pdf/1712.05884.pdf)
-3. [Tacotron 1 (Paper)](https://arxiv.org/abs/1703.10135)
+3. [Tacotron 1 (Paper)](https://arxiv.org/abs/1703.10135.pdf)
 4. [Wavenet (Blog)](https://deepmind.com/blog/article/wavenet-generative-model-raw-audio)
 5. [Wavenet (Paper)](https://arxiv.org/pdf/1609.03499.pdf)
+6. [PixelCNN (Paper)](https://arxiv.org/pdf/1606.05328.pdf)
 
 ### Conditioned Speech Conversion
 1. [Nonparallel Emotional Speech Conversion](https://arxiv.org/pdf/1811.01174.pdf)
