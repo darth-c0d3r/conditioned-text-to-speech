@@ -16,7 +16,8 @@ We aim to implement a Neural Network system for generating the speech correspond
 3. [Tacotron 1 (Paper)](https://arxiv.org/abs/1703.10135.pdf)
 4. [Wavenet (Blog)](https://deepmind.com/blog/article/wavenet-generative-model-raw-audio)
 5. [Wavenet (Paper)](https://arxiv.org/pdf/1609.03499.pdf)
-6. [PixelCNN (Paper)](https://arxiv.org/pdf/1606.05328.pdf)
+6. [Conditional PixelCNN (Paper)](https://arxiv.org/pdf/1606.05328.pdf)
+7. [PixelRNN & PixelCNN (Paper)](https://arxiv.org/pdf/1601.06759.pdf)
 
 ### Conditioned Speech Conversion
 1. [Nonparallel Emotional Speech Conversion](https://arxiv.org/pdf/1811.01174.pdf)
