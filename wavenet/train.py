@@ -13,7 +13,7 @@ files = os.listdir(folder)
 rate, data = wavfile.read(folder+files[0])
 data, indices = quantize_waveform(data)
 
-epochs = 100
+epochs = 1000
 
 network = Wavenet()
 optimizer = optim.Adam(network.parameters(), lr=10)
@@ -33,3 +33,7 @@ for epoch in range(epochs):
 	optimizer.zero_grad()
 	loss.backward()
 	optimizer.step()
+
+network.eval()
+sample = network.sample(data.shape[2])
+wavfile.write(folder+"sample_"+files[0],rate,sample)

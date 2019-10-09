@@ -22,13 +22,22 @@ def quantize_waveform(waveform, quantiles=256):
 
 	return waveform, indices
 
-def denormalize_waveform(waveform):
+def normalize2denormalize(waveform):
 	"""
-	Used to denormalize a waveform from [-1 to 1] to int16 values.
+	Used to denormalize a waveform from [-1 to 1) to int16 values.
 	The data can be saved without denormalizing as well, though.
 	"""
 
 	bits = 16 # hardcoded number of bits
 	waveform = (waveform*(2**(bits-1))).astype('int')
+
+	return waveform
+
+def index2normalize(indices):
+	"""
+	converts a sequence of indices to corresponding values in [-1 to 1)
+	"""
+	waveform = float(indices)/256.0 # [0 to 1)
+	waveform = (waveform*2)-1 # [-1 to 1)
 
 	return waveform

@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from util import *
 
 class Wavenet(nn.Module):
 	"""
@@ -17,8 +18,8 @@ class Wavenet(nn.Module):
 		# --------------------------------#
 		# network parameters
 		
-		num_layers = 6 # number of residual layers in the network
-		max_dilation = 4 # after how many layers to reset dilation
+		num_layers = 32 # number of residual layers in the network
+		max_dilation = 8 # after how many layers to reset dilation
 		kernel_size = 3
 		output_size = 256
 
@@ -65,6 +66,14 @@ class Wavenet(nn.Module):
 		"""
 		Used to sample from the learned distribution.
 		"""
-		return
+
+		waveform = [0.]
+		for _ in range(output_len):
+			data = torch.tensor(waveform).view(1,1,-1)
+			probs = self.forward(data)[0,:,-1]
+			idx = torch.multinomial(probs, 1)
+			waveform.append(index2normalize(idx))
+
+		return np.array(waveform[1:])
 
 
