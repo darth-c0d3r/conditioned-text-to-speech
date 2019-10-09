@@ -26,9 +26,10 @@ class Wavenet(nn.Module):
 
 		# initialize the empty list
 		self.res_layers = []
+		self.kernel_size = kernel_size # required for sampling
 
 		for layer in range(num_layers):
-			
+
 			# calculate dilation and padding
 			dilation = 2**(layer%max_dilation)
 			padding = kernel_size * dilation - (dilation - 1)
@@ -53,10 +54,17 @@ class Wavenet(nn.Module):
 		inp_len = X.shape[2]
 
 		for conv1, conv2, conv3 in self.res_layers:
+
 			# gated activation unit + residual connection
 			X = X + conv3((torch.tanh(conv1(X))*torch.sigmoid(conv2(X)))[:,:,:inp_len])
 
-		X = torch.softmax(self.output_layer(X))
+		X = torch.softmax(self.output_layer(X), 2)
 		return X
+
+	def sample(self, output_len):
+		"""
+		Used to sample from the learned distribution.
+		"""
+		return
 
 
