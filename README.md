@@ -18,6 +18,8 @@ We aim to implement a Neural Network system for generating the speech correspond
 5. [Wavenet (Paper)](https://arxiv.org/pdf/1609.03499.pdf)
 6. [Conditional PixelCNN (Paper)](https://arxiv.org/pdf/1606.05328.pdf)
 7. [PixelRNN & PixelCNN (Paper)](https://arxiv.org/pdf/1601.06759.pdf)
+8. [Useful Paper for Wavenet](https://arxiv.org/pdf/1702.07825.pdf)
+9. [Wavenet Tutorial Blog](http://sergeiturukin.com/2017/03/02/wavenet.html)
 
 ### Conditioned Speech Conversion
 1. [Nonparallel Emotional Speech Conversion](https://arxiv.org/pdf/1811.01174.pdf)

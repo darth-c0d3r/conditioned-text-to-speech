@@ -1,3 +1,5 @@
 .gitignore
 __pycache__
 audio
+saved_models
+audio_samples

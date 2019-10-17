@@ -1,5 +1,14 @@
 import numpy as np
 import torch
+import os
+import scipy.io.wavfile as wavfile
+
+class Hyperparameters():
+	"""
+	Empty class that can hold the hyperparameters
+	"""
+	def __init__(self):
+		pass
 
 def get_device(cuda=True):
 	"""
@@ -18,7 +27,7 @@ def quantize_waveform(waveform, quantiles=256, non_linear=True):
 
 	Input waveform : [-2^x,2^x-1]
 	Output waveform : [-1,1)
-	Indices : [0,255]
+	Indices : [0,quantiles-1]
 	"""
 
 	bits = 16 # hardcoded number of bits
@@ -34,10 +43,10 @@ def quantize_waveform(waveform, quantiles=256, non_linear=True):
 
 	# get the indices
 	indices = (1+waveform)/2 # range: [0 to 1)
-	indices = (indices*256).astype('int') # range: [0 to 255]
+	indices = (indices*quantiles).astype('int') # range: [0 to 255]
 
 	# get the waveform from the indices
-	waveform = 2*(indices.astype('float')/256) - 1
+	waveform = 2*(indices.astype('float')/quantiles) - 1
 
 	return waveform, indices
 
@@ -53,11 +62,11 @@ def normalize2denormalize(waveform):
 
 	return waveform
 
-def index2normalize(indices):
+def index2normalize(indices, quantiles=256):
 	"""
 	converts a sequence of indices to corresponding values in [-1 to 1)
 	"""
-	waveform = float(indices)/256.0 # [0 to 1)
+	waveform = float(indices)/float(quantiles) # [0 to 1)
 	waveform = (waveform*2)-1 # [-1 to 1)
 
 	return waveform
@@ -66,12 +75,70 @@ def sample(model, output_len, device):
 	"""
 	Used to sample from the learned distribution using the input model.
 	"""
-
+	print("Sampling Audio...")
+	model.eval()
 	waveform = [0.]
 	for _ in range(output_len):
 		data = torch.tensor(waveform).view(1,1,-1).to(device)
-		probs = model(data)[0,:,-1]
+		probs = torch.softmax(model(data),2)[0,:,-1]
 		idx = torch.multinomial(probs, 1)
-		waveform.append(index2normalize(idx))
+		waveform.append(index2normalize(idx, model.quantiles))
 
 	return np.array(waveform[1:])
+
+def sample_mseloss(model, output_len, device):
+	"""
+	Used to sample from the learned distribution using the input model.
+	This function is only for testing and samples assuming that
+	MSE Loss was used to train the model.
+	"""
+	model.eval()
+	waveform = [0.]
+	for _ in range(output_len):
+		data = torch.tensor(waveform).view(1,1,-1).to(device)
+		sample = model(data)[0,:,-1]
+		waveform.append(sample.item())
+
+	return np.array(waveform[1:])
+
+def save_model(model):
+	"""
+	Used to save the model into a file.
+	"""
+	folder = "saved_models"
+	if folder not in os.listdir():
+		os.mkdir(folder)
+	folder = folder+"/"
+
+	while True:
+		files = os.listdir(folder)
+		filename = input("Enter filename : ")
+		if filename in files:
+			response = input("Warning! File already exists. Override? [y/n] : ")
+			if response.strip() in ("Y", "y"):
+				break
+			continue
+		break
+
+	torch.save(model, folder+filename)
+
+def save_audio(data, rate):
+	"""
+	Used to save the audio into a file.
+	"""
+	folder = "audio_samples"
+	if folder not in os.listdir():
+		os.mkdir(folder)
+	folder = folder+"/"
+
+	while True:
+		files = os.listdir(folder)
+		filename = input("Enter filename : ")
+		if filename in files:
+			response = input("Warning! File already exists. Override? [y/n] : ")
+			if response.strip() in ("Y", "y"):
+				break
+			continue
+		break
+
+	wavfile.write(folder+filename, rate, data)

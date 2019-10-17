@@ -1,59 +1,80 @@
-import os
-import scipy.io.wavfile as wavfile
-
 import torch
-import torch.nn.functional as F
 from torch import nn, optim
 from torch.autograd import Variable
 
 from util import *
 from model import Wavenet
-from model import Convnet
+from data import getAudioDataset
 
-folder = "../audio/"
-files = os.listdir(folder)
+def train(model, dataset, loss_fxn, opt, hyperparams, device):
 
-device = get_device()
+	model.train()
 
-rate, data = wavfile.read(folder+files[0])
-data = np.zeros(data.shape)
-data = data[:10]
+	# iterate epochs number of times
+	for epoch in range(1, hyperparams.epochs+1):
 
-data, indices = quantize_waveform(data)
+		# put the data into a dataloader
+		trainloader = torch.utils.data.DataLoader(dataset, batch_size=hyperparams.batch_size, shuffle=True)
 
+		total_loss = 0.
 
-print("Using file: %s"%(files[0]))
+		# iterate over all batches
+		for data, target in trainloader:
 
-epochs = 1000
+			data, target = Variable(data.to(device)), Variable(target.to(device))
 
-network = Convnet()
-network = network.to(device)
+			# zero out the gradients
+			model.zero_grad()
+			opt.zero_grad()
 
-optimizer = optim.Adam(network.parameters(), lr=1e-4)
+			# get the output and loss
+			out = model(data)
+			loss = loss_fxn(out, target)
 
-data = torch.tensor(data).float().view(1,1,-1)
-target = torch.tensor(indices).view(1,-1)
+			# get the gradients and update params
+			loss.backward()
+			opt.step()
 
-data = torch.zeros(data.shape)-1
-target = torch.zeros(target.shape).long()
+			# add loss to the total loss
+			total_loss += len(data)*loss.item()
 
-for epoch in range(epochs):
+		# print the loss for epoch i if needed
+		if epoch % hp.report == 0:
+			print("Epoch %d : Loss = %06f" % (epoch, total_loss / float(len(trainloader))))
 
-	data, target = Variable(data).to(device), Variable(target).to(device)
+	# return the trained model
+	return model
 
-	out = network(data)
-	loss = F.cross_entropy(out, target)
+if __name__ == '__main__':
 
-	if(epoch%50 == 0):
-		print(float(loss))
+	# get the required dataset
+	folder = "../audio/"
+	dataset = getAudioDataset(folder)
 
-	optimizer.zero_grad()
-	loss.backward()
-	optimizer.step()
+	# get the device used
+	device = get_device()
 
-print("Generating sample.")
+	# define the model
+	model = Wavenet()
+	model = model.to(device)
 
-network.eval()
-sample = sample(network, data.shape[2], device)
-wavfile.write(folder+"sample_"+files[0],rate,sample)
-print(sample)
+	# define hyper-parameters
+	hp = Hyperparameters()
+	hp.lr = 1e-2
+	hp.epochs = 10000
+	hp.batch_size = 1
+	hp.report = 10
+
+	# define loss function and optimizer
+	optimizer = optim.Adam(model.parameters(), lr=hp.lr)
+	loss_fxn = nn.CrossEntropyLoss()
+
+	# call the train function
+	model = train(model, dataset["data"], loss_fxn, optimizer, hp, device)
+
+	# set the sampe_rate and save the model
+	model.sample_rate = dataset["rate"]
+	save_model(model)
+
+	audio_sample = sample(model, dataset["data"][0][0].shape[1], device)
+	save_audio(audio_sample, model.sample_rate)
