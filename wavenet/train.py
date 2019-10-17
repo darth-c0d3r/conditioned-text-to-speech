@@ -3,6 +3,7 @@ from torch import nn, optim
 from torch.autograd import Variable
 
 from util import *
+from sample import sample
 from model import Wavenet
 from data import getAudioDataset
 
@@ -60,7 +61,7 @@ if __name__ == '__main__':
 
 	# define hyper-parameters
 	hp = Hyperparameters()
-	hp.lr = 1e-2
+	hp.lr = 1e-3
 	hp.epochs = 10000
 	hp.batch_size = 1
 	hp.report = 10
@@ -74,7 +75,8 @@ if __name__ == '__main__':
 
 	# set the sampe_rate and save the model
 	model.sample_rate = dataset["rate"]
-	save_model(model)
+	save_model(model, "wavenet1.pt")
 
+	# sample an audio and save it
 	audio_sample = sample(model, dataset["data"][0][0].shape[1], device)
-	save_audio(audio_sample, model.sample_rate)
+	save_audio(audio_sample, model.sample_rate, "sample1.wav")

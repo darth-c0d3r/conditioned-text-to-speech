@@ -71,37 +71,7 @@ def index2normalize(indices, quantiles=256):
 
 	return waveform
 
-def sample(model, output_len, device):
-	"""
-	Used to sample from the learned distribution using the input model.
-	"""
-	print("Sampling Audio...")
-	model.eval()
-	waveform = [0.]
-	for _ in range(output_len):
-		data = torch.tensor(waveform).view(1,1,-1).to(device)
-		probs = torch.softmax(model(data),2)[0,:,-1]
-		idx = torch.multinomial(probs, 1)
-		waveform.append(index2normalize(idx, model.quantiles))
-
-	return np.array(waveform[1:])
-
-def sample_mseloss(model, output_len, device):
-	"""
-	Used to sample from the learned distribution using the input model.
-	This function is only for testing and samples assuming that
-	MSE Loss was used to train the model.
-	"""
-	model.eval()
-	waveform = [0.]
-	for _ in range(output_len):
-		data = torch.tensor(waveform).view(1,1,-1).to(device)
-		sample = model(data)[0,:,-1]
-		waveform.append(sample.item())
-
-	return np.array(waveform[1:])
-
-def save_model(model):
+def save_model(model, filename=None):
 	"""
 	Used to save the model into a file.
 	"""
@@ -110,19 +80,20 @@ def save_model(model):
 		os.mkdir(folder)
 	folder = folder+"/"
 
-	while True:
-		files = os.listdir(folder)
-		filename = input("Enter filename : ")
-		if filename in files:
-			response = input("Warning! File already exists. Override? [y/n] : ")
-			if response.strip() in ("Y", "y"):
-				break
-			continue
-		break
+	if filename is None:
+		while True:
+			files = os.listdir(folder)
+			filename = input("Enter filename [model]: ")
+			if filename in files:
+				response = input("Warning! File already exists. Override? [y/n] : ")
+				if response.strip() in ("Y", "y"):
+					break
+				continue
+			break
 
 	torch.save(model, folder+filename)
 
-def save_audio(data, rate):
+def save_audio(data, rate, filename=None):
 	"""
 	Used to save the audio into a file.
 	"""
@@ -131,14 +102,15 @@ def save_audio(data, rate):
 		os.mkdir(folder)
 	folder = folder+"/"
 
-	while True:
-		files = os.listdir(folder)
-		filename = input("Enter filename : ")
-		if filename in files:
-			response = input("Warning! File already exists. Override? [y/n] : ")
-			if response.strip() in ("Y", "y"):
-				break
-			continue
-		break
+	if filename is None:
+		while True:
+			files = os.listdir(folder)
+			filename = input("Enter filename [audio]: ")
+			if filename in files:
+				response = input("Warning! File already exists. Override? [y/n] : ")
+				if response.strip() in ("Y", "y"):
+					break
+				continue
+			break
 
 	wavfile.write(folder+filename, rate, data)
