@@ -1,3 +1,5 @@
+import os
+
 import torch
 from torch import nn, optim
 from torch.autograd import Variable
@@ -7,7 +9,12 @@ from sample import sample
 from model import Wavenet
 from data import getAudioDataset
 
-def train(model, dataset, loss_fxn, opt, hyperparams, device):
+def train(model, dataset, loss_fxn, opt, hyperparams, device, plot):
+
+	# set up the plotting script
+	if plot is True:
+		os.system("python3 -m visdom.server")
+		plotter = VisdomLinePlotter("Wavenet")
 
 	model.train()
 
@@ -43,6 +50,10 @@ def train(model, dataset, loss_fxn, opt, hyperparams, device):
 		if epoch % hp.report == 0:
 			print("Epoch %d : Loss = %06f" % (epoch, total_loss / float(len(trainloader))))
 
+			# make the plot if needed
+			if plot is True:
+				plotter.plot('loss', 'train', 'Training Loss', epoch, total_loss / float(len(trainloader)))
+
 	# return the trained model
 	return model
 
@@ -71,12 +82,13 @@ if __name__ == '__main__':
 	loss_fxn = nn.CrossEntropyLoss()
 
 	# call the train function
-	model = train(model, dataset["data"], loss_fxn, optimizer, hp, device)
+	plot = False # Use Visdom to plot the Training Loss Curve
+	model = train(model, dataset["data"], loss_fxn, optimizer, hp, device, plot)
 
 	# set the sampe_rate and save the model
 	model.sample_rate = dataset["rate"]
 	save_model(model, "wavenet1.pt")
 
-	# sample an audio and save it
+	# Free Samples (with the training) [Sorry xD]
 	audio_sample = sample(model, dataset["data"][0][0].shape[1], device)
 	save_audio(audio_sample, model.sample_rate, "sample1.wav")

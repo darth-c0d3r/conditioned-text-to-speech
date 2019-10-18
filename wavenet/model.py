@@ -26,6 +26,7 @@ class Wavenet(nn.Module):
 
 		# --------------------------------#
 
+		self.res_channels = res_channels # needed to split for gated conv
 		self.quantiles = quantiles # number of quantizations of data
 		self.sample_rate = None # will be set externally after training
 
@@ -41,15 +42,14 @@ class Wavenet(nn.Module):
 			dilation = 2**(layer%max_dilation)
 			padding = kernel_size * dilation - (dilation - 1) - 1
 
-			# 2 conv layers for gated activation unit
-			conv1 = nn.Conv1d(res_channels, res_channels, kernel_size, dilation=dilation, padding=padding)
-			conv2 = nn.Conv1d(res_channels, res_channels, kernel_size, dilation=dilation, padding=padding)
+			# joined conv layer for gated activation unit
+			gated_conv = nn.Conv1d(res_channels, 2*res_channels, kernel_size, dilation=dilation, padding=padding)
 
 			# 1x1 conv layers for residual layers and skip connections
 			res_conv = nn.Conv1d(res_channels, res_channels, 1)
 			skip_conv = nn.Conv1d(res_channels, skip_channels, 1)
 
-			self.res_layers.append(nn.ModuleList([conv1, conv2, res_conv, skip_conv]))
+			self.res_layers.append(nn.ModuleList([gated_conv, res_conv, skip_conv]))
 			
 		# output layer will have a categorical loss
 		self.output_layer1 = nn.Conv1d(num_layers*skip_channels, output_size, 1)
@@ -65,10 +65,19 @@ class Wavenet(nn.Module):
 		X = self.causal_conv(X)[:,:,:inp_len] # remove the temporal dependencies
 		skip_outs = []
 
-		for conv1, conv2, res_conv, skip_conv in self.res_layers:
+		for gated_conv, res_conv, skip_conv in self.res_layers:
 
 			# gated activation unit + residual connection
-			dilation_out = (torch.tanh(conv1(X))*torch.sigmoid(conv2(X)))[:,:,:inp_len]
+			gated_out = gated_conv(X)
+
+			# split the joint output into two
+			tanh_in = gated_out[:,:self.res_channels,:]
+			sigm_in = gated_out[:,self.res_channels:,:]
+
+			# get the dilation output
+			dilation_out = (torch.tanh(tanh_in)*torch.sigmoid(sigm_in))[:,:,:inp_len]
+
+			# add the residual layer output to input
 			X = X + res_conv(dilation_out)
 
 			# add the skip connection output
