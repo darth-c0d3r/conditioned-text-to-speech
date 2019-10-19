@@ -12,6 +12,10 @@ class AudioDataset(Dataset):
 
 		self.root_dir = root_dir
 		self.files = os.listdir(root_dir)
+
+		# filter the list for .wav files
+		self.files = list(filter(lambda name: name.endswith(".wav"), self.files))
+
 		self.quantiles = quantiles
 		self.non_linear = non_linear
 
@@ -29,8 +33,8 @@ class AudioDataset(Dataset):
 		if rate != self.rate:
 			self.warn = True
 
-		data, indices = quantize_waveform(data, self.quantiles, self.non_linear)
-		data = torch.tensor(data).view(1,-1)
+		_, indices = quantize_waveform(data, self.quantiles, self.non_linear)
+		data = torch.tensor(index2oneHot(indices, self.quantiles))
 		indices = torch.tensor(indices).view(-1)
 
 		return (data.float(), indices.long())

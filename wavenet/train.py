@@ -69,11 +69,12 @@ if __name__ == '__main__':
 	# define the model
 	model = Wavenet()
 	model = model.to(device)
+	model.device = device
 
 	# define hyper-parameters
 	hp = Hyperparameters()
 	hp.lr = 1e-3
-	hp.epochs = 10000
+	hp.epochs = 20000
 	hp.batch_size = 1
 	hp.report = 10
 
@@ -87,7 +88,7 @@ if __name__ == '__main__':
 
 	# set the sampe_rate and save the model
 	model.sample_rate = dataset["rate"]
-	save_model(model, "wavenet1.pt")
+	save_model(model, "wavenet2.pt")
 
 	# Free Samples (with the training) [Sorry xD]
 	audio_sample = sample(model, dataset["data"][0][0].shape[1], device)

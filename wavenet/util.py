@@ -86,10 +86,20 @@ def index2normalize(indices, quantiles=256):
 	"""
 	converts a sequence of indices to corresponding values in [-1 to 1)
 	"""
-	waveform = float(indices)/float(quantiles) # [0 to 1)
+	waveform = indices/float(quantiles) # [0 to 1)
 	waveform = (waveform*2)-1 # [-1 to 1)
 
 	return waveform
+
+def index2oneHot(indices, quantiles):
+	"""
+	Used to convert an array of indices to one-hot form.
+	indices: array of length n
+	output: np array of shape quantiles x n
+	"""
+	onehot = np.zeros((indices.size, quantiles))
+	onehot[np.arange(indices.size), indices] = 1
+	return onehot.transpose()
 
 def save_model(model, filename=None):
 	"""

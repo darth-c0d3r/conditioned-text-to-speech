@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from util import *
 
 def sample(model, output_len, device):
@@ -7,14 +8,25 @@ def sample(model, output_len, device):
 	"""
 	print("Sampling Audio...")
 	model.eval()
-	waveform = [(2*(torch.rand(1).item()))-1] #  random init [-1,1]
-	for _ in range(output_len):
-		data = torch.tensor(waveform).view(1,1,-1).to(device)
-		probs = torch.softmax(model(data),2)[0,:,-1]
-		idx = torch.multinomial(probs, 1)
-		waveform.append(index2normalize(idx, model.quantiles))
 
-	return np.array(waveform[1:])
+	# initialize waveform as empty
+	waveform = torch.zeros((1,model.quantiles,0)).to(device)
+	indices = []
+
+	for _ in range(output_len):
+
+		probs = torch.softmax(model(waveform)[0,:,-1],0)
+
+		idx = torch.multinomial(probs, 1) # might consider argmax also
+		indices.append(float(idx))
+
+		onehot = torch.zeros((1,model.quantiles,1))
+		onehot[0,idx,0] = 1
+		onehot = onehot.to(device)
+
+		waveform = torch.cat([waveform, onehot], 2)
+
+	return index2normalize(np.array(indices), model.quantiles)
 
 if __name__ == "__main__":
 

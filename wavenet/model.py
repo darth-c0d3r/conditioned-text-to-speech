@@ -29,9 +29,10 @@ class Wavenet(nn.Module):
 		self.res_channels = res_channels # needed to split for gated conv
 		self.quantiles = quantiles # number of quantizations of data
 		self.sample_rate = None # will be set externally after training
+		self.device = None # Required for the inference hack
 
 		# the first layer is the causal layer to remove temporal dependencies
-		self.causal_conv = nn.Conv1d(1, res_channels, kernel_size, padding=kernel_size)
+		self.causal_conv = nn.Conv1d(quantiles, res_channels, kernel_size, padding=kernel_size)
 
 		# initialize the empty list
 		self.res_layers = nn.ModuleList()
@@ -59,6 +60,10 @@ class Wavenet(nn.Module):
 
 		# X.shape = [k,1,n]
 		# where k is batch size
+
+		# a little hack for first step of inference
+		if X.shape[2] == 0:
+			X = torch.zeros((X.shape[0], X.shape[1],1)).to(self.device)
 
 		inp_len = X.shape[2] # get the input seq length
 
