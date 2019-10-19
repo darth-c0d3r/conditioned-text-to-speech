@@ -20,6 +20,9 @@ We aim to implement a Neural Network system for generating the speech correspond
 7. [PixelRNN & PixelCNN (Paper)](https://arxiv.org/pdf/1601.06759.pdf)
 8. [Useful Paper for Wavenet](https://arxiv.org/pdf/1702.07825.pdf)
 9. [Wavenet Tutorial Blog](http://sergeiturukin.com/2017/03/02/wavenet.html)
+10. [Wavenet (Keras Implementation)](https://github.com/basveeling/wavenet)
+11. [Wavenet (Tensorflow Implementation)](https://github.com/ibab/tensorflow-wavenet)
+12. [Wavenet (PyTorch Implementation)](https://github.com/vincentherrmann/pytorch-wavenet)
 
 ### Conditioned Speech Conversion
 1. [Nonparallel Emotional Speech Conversion](https://arxiv.org/pdf/1811.01174.pdf)
@@ -28,3 +31,4 @@ We aim to implement a Neural Network system for generating the speech correspond
 1. [Voice Impersonation using GANs](https://arxiv.org/pdf/1802.06840.pdf)
 
 ### Datasets
+1. [CSTR VCTK Corpus](https://homepages.inf.ed.ac.uk/jyamagis/page3/page58/page58.html)

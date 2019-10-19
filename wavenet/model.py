@@ -62,7 +62,7 @@ class Wavenet(nn.Module):
 
 		inp_len = X.shape[2] # get the input seq length
 
-		X = self.causal_conv(X)[:,:,:inp_len] # remove the temporal dependencies
+		X = torch.relu(self.causal_conv(X))[:,:,:inp_len] # remove the temporal dependencies
 		skip_outs = []
 
 		for gated_conv, res_conv, skip_conv in self.res_layers:
@@ -93,6 +93,20 @@ class Wavenet(nn.Module):
 
 		# get the final output
 		return skip_outs
+
+	def weight_init(self, params):
+		"""
+		Used to initialize the weights of all the layers.
+		params contain params.type and other values needed for init.
+		params.type can be one of the following:
+		1. uniform (params.a, params.b needed)
+		2. normal (params.mean, params.std needed)
+		3. xavier-uniform
+		4. xavier-normal
+		Need to complete it later.
+		"""
+		pass
+
 
 
 class Convnet(nn.Module):
