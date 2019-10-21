@@ -54,9 +54,13 @@ class Wavenet(nn.Module):
 			self.res_layers.append(nn.ModuleList([gated_conv, res_conv, skip_conv]))
 			
 		# output layer will have a categorical loss
+
 		# self.output_layer1 = nn.Conv1d(num_layers*skip_channels, output_size, 1)
-		# Uncomment above if appending skip connection outputs
 		self.output_layer1 = nn.Conv1d(skip_channels, output_size, 1)
+		
+		# Uncomment first above if appending skip connection outputs
+		# Uncomment second if summing up skip connection outputs
+
 		self.output_layer2 = nn.Conv1d(output_size, output_size, 1)
 
 	def forward(self, X):
