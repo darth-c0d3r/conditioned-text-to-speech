@@ -9,7 +9,18 @@ from sample import sample
 from model import Wavenet
 from data import getAudioDataset
 
-def train(model, dataset, loss_fxn, opt, hyperparams, device, plot):
+def train(model, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
+	"""
+	Parameters:
+	model: The network which is going to be trained
+	dataset: The dataset on which the model is to be trained
+	loss_fxn: The Loss Function used
+	opt: Optimzer
+	scd: The Learning Rate Scheduler
+	hyperparams: Object of class Hyperparameter containing hyperparams
+	device: The device being used to train (CPU/GPU)
+	plot: bool value to indicate if plotting is to be done
+	"""
 
 	# set up the plotting script
 	if plot is True:
@@ -42,6 +53,7 @@ def train(model, dataset, loss_fxn, opt, hyperparams, device, plot):
 			# get the gradients and update params
 			loss.backward()
 			opt.step()
+			scd.step()
 
 			# add loss to the total loss
 			total_loss += len(data)*loss.item()
@@ -78,13 +90,14 @@ if __name__ == '__main__':
 	hp.batch_size = 1
 	hp.report = 10
 
-	# define loss function and optimizer
+	# define optimizer, scheduler, and loss function
 	optimizer = optim.Adam(model.parameters(), lr=hp.lr)
+	scheduler = optim.lr_scheduler.StepLR(optimizer, hp.epochs//4, gamma=0.25)
 	loss_fxn = nn.CrossEntropyLoss()
 
 	# call the train function
 	plot = False # Use Visdom to plot the Training Loss Curve
-	model = train(model, dataset["data"], loss_fxn, optimizer, hp, device, plot)
+	model = train(model, dataset["data"], loss_fxn, optimizer, scheduler, hp, device, plot)
 
 	# set the sampe_rate and save the model
 	model.sample_rate = dataset["rate"]
