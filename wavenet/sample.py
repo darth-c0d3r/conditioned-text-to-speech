@@ -26,9 +26,12 @@ def sample(model, output_len, device, init=None):
 	with torch.no_grad():
 		for _ in range(output_len):
 
-			probs = torch.softmax(model(waveform)[0,:,-1],0)
+			probs = model(waveform)[0,:,-1]
 
-			idx = torch.multinomial(probs, 1) # might consider argmax also
+			# use multinomial or argmax
+			# idx = torch.multinomial(torch.softmax(probs,0), 1)
+			idx = torch.argmax(probs)
+
 			indices.append(float(idx))
 
 			onehot = torch.zeros((1,model.quantiles,1))
@@ -42,11 +45,11 @@ def sample(model, output_len, device, init=None):
 if __name__ == "__main__":
 
 	folder = "saved_models/"
-	modelname = "wavenet2.pt"
+	modelname = "wavenet1.pt"
 	device = get_device()
 
 	length = 20000
 
-	model = torch.load(folder+modelname).to(device)
+	model = torch.load(folder+modelname, map_location=device).to(device)
 	audio_sample = sample(model, length, device)
-	save_audio(audio_sample, model.sample_rate, "sample007.wav")
+	save_audio(audio_sample, model.sample_rate, "sample8.wav")
