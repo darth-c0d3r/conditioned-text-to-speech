@@ -3,6 +3,7 @@ import torch
 from visdom import Visdom
 import os
 import scipy.io.wavfile as wavfile
+import matplotlib.pyplot as pyplot
 
 class Hyperparameters():
 	"""
@@ -144,3 +145,17 @@ def save_audio(data, rate, filename=None):
 			break
 
 	wavfile.write(folder+filename, rate, data)
+
+def visualize_waveform(waveform=None, wavefile=None):
+	"""
+	Used to display waveform from a file or from an array.
+	Exactly one of the two args should be not None.
+	"""
+
+	# read waveform from file if needed
+	if wavefile is not None:
+		_, waveform = wavfile.read(wavefile)
+
+	# plot the waveform using pyplot
+	pyplot.plot(range(len(waveform)), waveform)
+	pyplot.show()	
