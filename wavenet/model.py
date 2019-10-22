@@ -76,7 +76,7 @@ class Wavenet(nn.Module):
 
 		X = torch.relu(self.causal_conv(X))[:,:,:inp_len] # remove the temporal dependencies
 		skip_outs = []
-		skip_sum = torch.zeros(X.shape[0], self.skip_channels, X.shape[2])
+		skip_sum = torch.zeros(X.shape[0], self.skip_channels, X.shape[2]).to(self.device)
 
 		for gated_conv, res_conv, skip_conv in self.res_layers:
 

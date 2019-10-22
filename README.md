@@ -10,7 +10,7 @@ We aim to implement a Neural Network system for generating the speech correspond
 
 ## References
 
-### Text to Speech Papers
+### Text to Speech
 1. [Tacotron 2 (Blog)](https://ai.googleblog.com/2017/12/tacotron-2-generating-human-like-speech.html)
 2. [Tacotron 2 (Paper)](https://arxiv.org/pdf/1712.05884.pdf)
 3. [Tacotron 1 (Paper)](https://arxiv.org/abs/1703.10135.pdf)
@@ -23,6 +23,10 @@ We aim to implement a Neural Network system for generating the speech correspond
 10. [Wavenet (Keras Implementation)](https://github.com/basveeling/wavenet)
 11. [Wavenet (Tensorflow Implementation)](https://github.com/ibab/tensorflow-wavenet)
 12. [Wavenet (PyTorch Implementation)](https://github.com/vincentherrmann/pytorch-wavenet)
+
+### Speaker Encoding
+1. [Speech Cloning (Paper)](https://arxiv.org/pdf/1806.04558.pdf)
+2. [End-To-End Speaker Verification (Paper)](https://arxiv.org/pdf/1710.10467.pdf)
 
 ### Conditioned Speech Conversion
 1. [Nonparallel Emotional Speech Conversion](https://arxiv.org/pdf/1811.01174.pdf)

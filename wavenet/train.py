@@ -60,7 +60,7 @@ def train(model, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 
 		# print the loss for epoch i if needed
 		if epoch % hp.report == 0:
-			print("Epoch %d : Loss = %06f" % (epoch, total_loss / float(len(trainloader))))
+			print("Epoch %d : Loss = %08f" % (epoch, total_loss / float(len(trainloader))))
 
 			# make the plot if needed
 			if plot is True:
@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
 	# define hyper-parameters
 	hp = Hyperparameters()
-	hp.lr = 1e-3
+	hp.lr = 1e-2
 	hp.epochs = 20000
 	hp.batch_size = 1
 	hp.report = 10
@@ -101,7 +101,7 @@ if __name__ == '__main__':
 
 	# set the sampe_rate and save the model
 	model.sample_rate = dataset["rate"]
-	save_model(model, "wavenet2.pt")
+	save_model(model, "wavenet1.pt")
 
 	# Free Samples (with the training) [Sorry xD]
 	audio_sample = sample(model, dataset["data"][0][0].shape[1], device)
