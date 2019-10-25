@@ -26,7 +26,8 @@ We aim to implement a Neural Network system for generating the speech correspond
 
 ### Speaker Encoding
 1. [Speech Cloning (Paper)](https://arxiv.org/pdf/1806.04558.pdf)
-2. [End-To-End Speaker Verification (Paper)](https://arxiv.org/pdf/1710.10467.pdf)
+2. [End-To-End Speaker Verification (TE2E) (Paper)](https://arxiv.org/pdf/1509.08062.pdf)
+3. [End-To-End Speaker Verification (GE2E) (Paper)](https://arxiv.org/pdf/1710.10467.pdf)
 
 ### Conditioned Speech Conversion
 1. [Nonparallel Emotional Speech Conversion](https://arxiv.org/pdf/1811.01174.pdf)
