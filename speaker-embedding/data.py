@@ -28,7 +28,7 @@ class DummyDataset(Dataset):
 		audio2 = 0.001*np.random.randn((self.sample_length)) + (float(2*spkr2)/float(self.num_speakers-1)) - 1.0
 
 		audio1 = np.clip(audio1, -1.0, 0.9999)
-		audio1 = np.clip(audio2, -1.0, 0.9999)
+		audio2 = np.clip(audio2, -1.0, 0.9999)
 
 		wvfrm1, audio1 = quantize_waveform(audio1 * (2**(self.bits-1)), self.quantiles, non_linear=False)
 		wvfrm2, audio2 = quantize_waveform(audio2 * (2**(self.bits-1)), self.quantiles, non_linear=False)

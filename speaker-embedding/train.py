@@ -45,6 +45,9 @@ def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 
 			spkr1, spkr2, target = Variable(spkr1.to(device)), Variable(spkr2.to(device)), Variable(target.to(device))
 
+			spkr1 = spkr1.view(spkr1.shape[1], -1, embd.input_size)
+			spkr2 = spkr2.view(spkr2.shape[1], -1, embd.input_size)
+
 			# zero out the gradients
 			embd.zero_grad()
 			disc.zero_grad()
@@ -62,7 +65,7 @@ def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 			scd.step()
 
 			# add loss to the total loss
-			total_loss += len(data)*loss.item()
+			total_loss += spkr1.shape[1]*loss.item()
 
 		# print the loss for epoch i if needed
 		if epoch % hp.report == 0:
@@ -92,15 +95,16 @@ if __name__ == '__main__':
 
 	# define hyper-parameters
 	hp = Hyperparameters()
-	hp.lr = 1e-2
+	hp.lr = 1e-3
 	hp.epochs = 20000
 	hp.batch_size = 1
-	hp.report = 10
+	hp.report = 1
 
 	# define optimizer, scheduler, and loss function
 	optimizer = optim.Adam(list(embd.parameters())+list(disc.parameters()), lr=hp.lr)
 	scheduler = optim.lr_scheduler.StepLR(optimizer, hp.epochs//4, gamma=1)
-	loss_fxn = nn.BCELoss() # binary cross entropy loss
+	# loss_fxn = nn.BCELoss() # binary cross entropy loss
+	loss_fxn = nn.CrossEntropyLoss()
 
 	# call the train function
 	plot = False # Use Visdom to plot the Training Loss Curve

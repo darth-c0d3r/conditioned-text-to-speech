@@ -66,8 +66,6 @@ class Discriminator(nn.Module):
 	def forward(self, Va, Vb):
 		# Va and Vb are the two speaker embeddings
 		# Va.shape = [batch-size, self.embedding_size]
-
-		Va = Va.view()
 			
 		# concatenate the two embeddings
 		V = torch.cat([Va, Vb], 1)
