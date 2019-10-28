@@ -1,6 +1,62 @@
 from util import *
+import scipy.io.wavfile as wavfile
 from torch.utils.data import Dataset
 import os
+
+class SpeakerDataset(Dataset):
+
+	def __init__(self, quantiles, folder):
+
+		if folder.endswith("/"):
+			folder = folder[:-1]
+
+		self.quantiles = quantiles
+		self.folder = folder
+
+		self.bits = 16
+
+		self.speakers = os.listdir(folder)
+		self.num_speakers = len(self.speakers)
+		# self.samples_per_speaker = [len(os.listdir(self.folder + "/" + speaker)) for speaker in self.speakers]
+		self.samples_per_speaker = len(os.listdir(self.folder + "/" + self.speakers[0])) # assuming equal samples
+
+	def __len__(self):
+		# number of possible pairs
+		# = (n*m)*(n*m)
+
+		return (self.num_speakers * self.samples_per_speaker) ** 2
+
+	def __getitem__(self, idx):
+		
+		idx1 = idx // (self.num_speakers * self.samples_per_speaker) # [0, n*m)
+		idx2 = idx  % (self.num_speakers * self.samples_per_speaker) # [0, n*m)
+
+		spkr1, file1 = idx1 // self.samples_per_speaker, idx1 % self.samples_per_speaker
+		spkr2, file2 = idx2 // self.samples_per_speaker, idx2 % self.samples_per_speaker
+
+		file1 = self.folder+"/"+self.speakers[spkr1]+"/"+os.listdir(self.folder+"/"+self.speakers[spkr1])[file1]
+		file2 = self.folder+"/"+self.speakers[spkr2]+"/"+os.listdir(self.folder+"/"+self.speakers[spkr2])[file2]
+
+		_, audio1 = wavfile.read(file1)
+		_, audio2 = wavfile.read(file2)
+
+		wvfrm1, audio1 = quantize_waveform(audio1, self.quantiles, non_linear=True)
+		wvfrm2, audio2 = quantize_waveform(audio2, self.quantiles, non_linear=True)
+
+		# visualize_waveform(waveform=wvfrm1)
+		# visualize_waveform(waveform=wvfrm2)
+
+		audio1 = index2oneHot(audio1, self.quantiles)
+		audio2 = index2oneHot(audio2, self.quantiles)
+
+		return torch.tensor(audio1).t().float(), torch.tensor(audio2).t().float(), torch.tensor(int(spkr1 == spkr2))
+
+def getSpeakerDataset(folder):
+	quantiles = 256
+	return {"data" : SpeakerDataset(quantiles, folder)}
+
+
+# ---------------------------------------------------------------------------------------------- #
 
 class DummyDataset(Dataset):
 
@@ -24,8 +80,11 @@ class DummyDataset(Dataset):
 		spkr1 = (idx//(self.num_speakers * self.samples_per_speaker))//self.samples_per_speaker
 		spkr2 = (idx %(self.num_speakers * self.samples_per_speaker))//self.samples_per_speaker
 
-		audio1 = 0.001*np.random.randn((self.sample_length)) + (float(2*spkr1)/float(self.num_speakers-1)) - 1.0
-		audio2 = 0.001*np.random.randn((self.sample_length)) + (float(2*spkr2)/float(self.num_speakers-1)) - 1.0
+		value1 = (float(2*spkr1)/float(self.num_speakers-1)) - 1.0
+		value2 = (float(2*spkr2)/float(self.num_speakers-1)) - 1.0
+
+		audio1 = 0.001*np.random.randn((self.sample_length)) + value1
+		audio2 = 0.001*np.random.randn((self.sample_length)) + value2
 
 		audio1 = np.clip(audio1, -1.0, 0.9999)
 		audio2 = np.clip(audio2, -1.0, 0.9999)
@@ -38,6 +97,9 @@ class DummyDataset(Dataset):
 
 		audio1 = index2oneHot(audio1, self.quantiles)
 		audio2 = index2oneHot(audio2, self.quantiles)
+
+		audio1 = torch.zeros(audio1.shape) + value1
+		audio2 = torch.zeros(audio2.shape) + value2
 
 		return torch.tensor(audio1).t().float(), torch.tensor(audio2).t().float(), torch.tensor(int(spkr1 == spkr2))
 

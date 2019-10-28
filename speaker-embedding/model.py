@@ -19,14 +19,14 @@ class SpeakerEmbedding(nn.Module):
 		self.embedding_size = 128 # size of speaker representation
 		# --------------------------------#
 
-		self.lstm = nn.LSTM(self.input_size, self.hidden_size, self.num_layers)
+		self.lstm = nn.LSTM(self.input_size, self.hidden_size, self.num_layers, batch_first=True)
 		self.output_layer = nn.Linear(self.hidden_size, self.embedding_size)
 
 	def forward(self, X):
-		batch_size = X.shape[1]
+		batch_size = X.shape[0]
 
 		# initialize the hidden state and cell state
-		# 1, because num_directions = 1
+		# self.num_layers * 1, because num_directions = 1
 		h0 = torch.randn((self.num_layers, batch_size, self.hidden_size))
 		c0 = torch.randn((self.num_layers, batch_size, self.hidden_size))
 

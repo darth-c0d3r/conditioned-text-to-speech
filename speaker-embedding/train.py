@@ -7,7 +7,7 @@ from torch.autograd import Variable
 from util import *
 from model import SpeakerEmbedding
 from model import Discriminator
-from data import getDummyDataset
+from data import getSpeakerDataset
 
 def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 	"""
@@ -27,7 +27,7 @@ def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 	# set up the plotting script
 	if plot is True:
 		os.system("python3 -m visdom.server")
-		plotter = VisdomLinePlotter("Wavenet")
+		plotter = VisdomLinePlotter("SpeakerEmbedding")
 
 	embd.train()
 	disc.train()
@@ -44,9 +44,6 @@ def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 		for spkr1, spkr2, target in trainloader:
 
 			spkr1, spkr2, target = Variable(spkr1.to(device)), Variable(spkr2.to(device)), Variable(target.to(device))
-
-			spkr1 = spkr1.view(spkr1.shape[1], -1, embd.input_size)
-			spkr2 = spkr2.view(spkr2.shape[1], -1, embd.input_size)
 
 			# zero out the gradients
 			embd.zero_grad()
@@ -65,7 +62,7 @@ def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 			scd.step()
 
 			# add loss to the total loss
-			total_loss += spkr1.shape[1]*loss.item()
+			total_loss += spkr1.shape[0]*loss.item()
 
 		# print the loss for epoch i if needed
 		if epoch % hp.report == 0:
@@ -82,7 +79,7 @@ if __name__ == '__main__':
 
 	# get the required dataset
 	# folder = "../audio/"
-	dataset = getDummyDataset()
+	dataset = getSpeakerDataset("../audio/")
 
 	# get the device used
 	device = get_device()
@@ -95,15 +92,14 @@ if __name__ == '__main__':
 
 	# define hyper-parameters
 	hp = Hyperparameters()
-	hp.lr = 1e-3
-	hp.epochs = 20000
+	hp.lr = 1e-4
+	hp.epochs = 1000
 	hp.batch_size = 1
 	hp.report = 1
 
 	# define optimizer, scheduler, and loss function
 	optimizer = optim.Adam(list(embd.parameters())+list(disc.parameters()), lr=hp.lr)
 	scheduler = optim.lr_scheduler.StepLR(optimizer, hp.epochs//4, gamma=1)
-	# loss_fxn = nn.BCELoss() # binary cross entropy loss
 	loss_fxn = nn.CrossEntropyLoss()
 
 	# call the train function
