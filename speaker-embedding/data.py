@@ -21,6 +21,48 @@ class SpeakerDataset(Dataset):
 		self.samples_per_speaker = len(os.listdir(self.folder + "/" + self.speakers[0])) # assuming equal samples
 
 	def __len__(self):
+		# number of possible clips
+		# = (n*m)
+		return self.num_speakers * self.samples_per_speaker
+
+	def __getitem__(self, idx):
+		
+		spkr, file = idx // self.samples_per_speaker, idx % self.samples_per_speaker
+		file = self.folder+"/"+self.speakers[spkr]+"/"+os.listdir(self.folder+"/"+self.speakers[spkr])[file]
+
+		_, audio = wavfile.read(file)
+		wvfrm, audio = quantize_waveform(audio, self.quantiles, non_linear=True)
+
+		# visualize_waveform(waveform=wvfrm)
+
+		audio = index2oneHot(audio, self.quantiles)
+
+		return torch.tensor(audio).t().float(), torch.tensor(spkr)
+
+def getSpeakerDataset(folder):
+	quantiles = 256
+	return {"data" : SpeakerDataset(quantiles, folder)}
+
+# ---------------------------------------------------------------------------------------------- #
+
+class SpeakerPairsDataset(Dataset):
+
+	def __init__(self, quantiles, folder):
+
+		if folder.endswith("/"):
+			folder = folder[:-1]
+
+		self.quantiles = quantiles
+		self.folder = folder
+
+		self.bits = 16
+
+		self.speakers = os.listdir(folder)
+		self.num_speakers = len(self.speakers)
+		# self.samples_per_speaker = [len(os.listdir(self.folder + "/" + speaker)) for speaker in self.speakers]
+		self.samples_per_speaker = len(os.listdir(self.folder + "/" + self.speakers[0])) # assuming equal samples
+
+	def __len__(self):
 		# number of possible pairs
 		# = (n*m)*(n*m)
 
@@ -40,8 +82,8 @@ class SpeakerDataset(Dataset):
 		_, audio1 = wavfile.read(file1)
 		_, audio2 = wavfile.read(file2)
 
-		wvfrm1, audio1 = quantize_waveform(audio1, self.quantiles, non_linear=True)
-		wvfrm2, audio2 = quantize_waveform(audio2, self.quantiles, non_linear=True)
+		wvfrm1, audio1 = quantize_waveform(audio1[:20], self.quantiles, non_linear=True)
+		wvfrm2, audio2 = quantize_waveform(audio2[:20], self.quantiles, non_linear=True)
 
 		# visualize_waveform(waveform=wvfrm1)
 		# visualize_waveform(waveform=wvfrm2)
@@ -51,9 +93,9 @@ class SpeakerDataset(Dataset):
 
 		return torch.tensor(audio1).t().float(), torch.tensor(audio2).t().float(), torch.tensor(int(spkr1 == spkr2))
 
-def getSpeakerDataset(folder):
+def getSpeakerPairsDataset(folder):
 	quantiles = 256
-	return {"data" : SpeakerDataset(quantiles, folder)}
+	return {"data" : SpeakerPairsDataset(quantiles, folder)}
 
 
 # ---------------------------------------------------------------------------------------------- #

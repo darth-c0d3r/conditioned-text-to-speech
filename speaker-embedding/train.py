@@ -7,7 +7,7 @@ from torch.autograd import Variable
 from util import *
 from model import SpeakerEmbedding
 from model import Discriminator
-from data import getSpeakerDataset
+from data import getSpeakerPairsDataset
 
 def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 	"""
@@ -23,7 +23,7 @@ def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 	plot: bool value to indicate if plotting is to be done
 	input should be of shape (seq_len, batch, input_size)
 	"""
-
+	i=0
 	# set up the plotting script
 	if plot is True:
 		os.system("python3 -m visdom.server")
@@ -31,6 +31,7 @@ def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 
 	embd.train()
 	disc.train()
+
 
 	# iterate epochs number of times
 	for epoch in range(1, hyperparams.epochs+1):
@@ -79,10 +80,10 @@ if __name__ == '__main__':
 
 	# get the required dataset
 	# folder = "../audio/"
-	dataset = getSpeakerDataset("../audio/")
+	dataset = getSpeakerPairsDataset("../audio/")
 
 	# get the device used
-	device = get_device()
+	device = get_device(False)
 
 	# define the models
 	embd = SpeakerEmbedding()
@@ -95,7 +96,7 @@ if __name__ == '__main__':
 	hp.lr = 1e-4
 	hp.epochs = 1000
 	hp.batch_size = 1
-	hp.report = 1
+	hp.report = 5
 
 	# define optimizer, scheduler, and loss function
 	optimizer = optim.Adam(list(embd.parameters())+list(disc.parameters()), lr=hp.lr)
@@ -105,6 +106,6 @@ if __name__ == '__main__':
 	# call the train function
 	plot = False # Use Visdom to plot the Training Loss Curve
 	embd, _ = train(embd, disc, dataset["data"], loss_fxn, optimizer, scheduler, hp, device, plot)
-
+	print("Training over.")
 	# save the embedding model
 	save_model(embd, "embd1.pt")

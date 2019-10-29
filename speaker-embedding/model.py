@@ -32,7 +32,6 @@ class SpeakerEmbedding(nn.Module):
 
 		_, (hn, _) = self.lstm(X, (h0, c0))
 		output = self.output_layer(hn[-1])
-
 		return output
 
 class Discriminator(nn.Module):
