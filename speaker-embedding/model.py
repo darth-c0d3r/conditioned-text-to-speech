@@ -7,13 +7,13 @@ class SpeakerEmbedding(nn.Module):
 
 	"""
 
-	def __init__(self):
+	def __init__(self, input_size):
 
 		super(SpeakerEmbedding, self).__init__()
 
 		# --------------------------------#
 		# network parameters
-		self.input_size = 256 # equal to the number of quantiles
+		self.input_size = input_size # equal to the number of quantiles
 		self.num_layers = 3 # number of stacked LSTM layers
 		self.hidden_size = 128 # size of hidden state
 		self.embedding_size = 128 # size of speaker representation
@@ -23,6 +23,8 @@ class SpeakerEmbedding(nn.Module):
 		self.output_layer = nn.Linear(self.hidden_size, self.embedding_size)
 
 	def forward(self, X):
+		# input : batch_size, seq_size, feat_size
+
 		batch_size = X.shape[0]
 
 		# initialize the hidden state and cell state

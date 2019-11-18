@@ -66,7 +66,7 @@ def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 			total_loss += spkr1.shape[0]*loss.item()
 
 		# print the loss for epoch i if needed
-		if epoch % hp.report == 0:
+		if epoch % hyperparams.report == 0:
 			print("Epoch %d : Loss = %08f" % (epoch, total_loss / float(len(trainloader))))
 
 			# make the plot if needed
@@ -76,17 +76,17 @@ def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 	# return the trained model
 	return embd, disc
 
-if __name__ == '__main__':
+def main():
 
 	# get the required dataset
-	# folder = "../audio/"
-	dataset = getSpeakerPairsDataset("../audio/")
+	folder = "../audio/"
+	dataset = getSpeakerPairsDataset(folder)
 
 	# get the device used
 	device = get_device(False)
 
 	# define the models
-	embd = SpeakerEmbedding()
+	embd = SpeakerEmbedding(dataset["data"].num_features)
 	disc = Discriminator()
 	embd = embd.to(device)
 	disc = disc.to(device)
@@ -109,3 +109,6 @@ if __name__ == '__main__':
 	print("Training over.")
 	# save the embedding model
 	save_model(embd, "embd1.pt")
+
+if __name__=='__main__':
+	main()

@@ -72,7 +72,7 @@ def train(model, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 if __name__ == '__main__':
 
 	# get the required dataset
-	folder = "../audio/"
+	folder = "../audio_small/"
 	dataset = getAudioDataset(folder)
 
 	# get the device used
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 	# define hyper-parameters
 	hp = Hyperparameters()
 	hp.lr = 1e-2
-	hp.epochs = 20000
+	hp.epochs = 2000
 	hp.batch_size = 1
 	hp.report = 10
 

@@ -1,24 +1,25 @@
 from util import *
-import scipy.io.wavfile as wavfile
+import librosa
 from torch.utils.data import Dataset
 import os
 
 class SpeakerDataset(Dataset):
 
-	def __init__(self, quantiles, folder):
+	def __init__(self, num_features, folder):
 
 		if folder.endswith("/"):
 			folder = folder[:-1]
 
-		self.quantiles = quantiles
+		self.num_features = num_features
 		self.folder = folder
-
-		self.bits = 16
 
 		self.speakers = os.listdir(folder)
 		self.num_speakers = len(self.speakers)
 		# self.samples_per_speaker = [len(os.listdir(self.folder + "/" + speaker)) for speaker in self.speakers]
 		self.samples_per_speaker = len(os.listdir(self.folder + "/" + self.speakers[0])) # assuming equal samples
+
+		# this is temporary
+		# finally, we should break each clip into subparts and calculate average of features
 
 	def __len__(self):
 		# number of possible clips
@@ -30,37 +31,36 @@ class SpeakerDataset(Dataset):
 		spkr, file = idx // self.samples_per_speaker, idx % self.samples_per_speaker
 		file = self.folder+"/"+self.speakers[spkr]+"/"+os.listdir(self.folder+"/"+self.speakers[spkr])[file]
 
-		_, audio = wavfile.read(file)
-		wvfrm, audio = quantize_waveform(audio, self.quantiles, non_linear=True)
+		rate, data = librosa.load(file)
+		features = librosa.features.mfcc(data, rate, n_mfcc=self.num_features)
 
-		# visualize_waveform(waveform=wvfrm)
+		# visualize_waveform(waveform=data)
 
-		audio = index2oneHot(audio, self.quantiles)
-
-		return torch.tensor(audio).t().float(), torch.tensor(spkr)
+		return torch.tensor(features).t(), torch.tensor(spkr)
 
 def getSpeakerDataset(folder):
-	quantiles = 256
-	return {"data" : SpeakerDataset(quantiles, folder)}
+	num_features = 20
+	return {"data" : SpeakerDataset(num_features, folder)}
 
 # ---------------------------------------------------------------------------------------------- #
 
 class SpeakerPairsDataset(Dataset):
 
-	def __init__(self, quantiles, folder):
+	def __init__(self, num_features, folder):
 
 		if folder.endswith("/"):
 			folder = folder[:-1]
 
-		self.quantiles = quantiles
+		self.num_features = num_features
 		self.folder = folder
-
-		self.bits = 16
 
 		self.speakers = os.listdir(folder)
 		self.num_speakers = len(self.speakers)
 		# self.samples_per_speaker = [len(os.listdir(self.folder + "/" + speaker)) for speaker in self.speakers]
 		self.samples_per_speaker = len(os.listdir(self.folder + "/" + self.speakers[0])) # assuming equal samples
+
+		# this is temporary
+		# finally, we should break each clip into subparts and calculate average of features
 
 	def __len__(self):
 		# number of possible pairs
@@ -79,23 +79,20 @@ class SpeakerPairsDataset(Dataset):
 		file1 = self.folder+"/"+self.speakers[spkr1]+"/"+os.listdir(self.folder+"/"+self.speakers[spkr1])[file1]
 		file2 = self.folder+"/"+self.speakers[spkr2]+"/"+os.listdir(self.folder+"/"+self.speakers[spkr2])[file2]
 
-		_, audio1 = wavfile.read(file1)
-		_, audio2 = wavfile.read(file2)
+		data1, rate1 = librosa.load(file1)
+		data2, rate2 = librosa.load(file2)
 
-		wvfrm1, audio1 = quantize_waveform(audio1[:20], self.quantiles, non_linear=True)
-		wvfrm2, audio2 = quantize_waveform(audio2[:20], self.quantiles, non_linear=True)
+		features1 = librosa.feature.mfcc(data1, rate1, n_mfcc=self.num_features)
+		features2 = librosa.feature.mfcc(data2, rate2, n_mfcc=self.num_features)
 
-		# visualize_waveform(waveform=wvfrm1)
-		# visualize_waveform(waveform=wvfrm2)
+		# visualize_waveform(waveform=data1)
+		# visualize_waveform(waveform=data2)
 
-		audio1 = index2oneHot(audio1, self.quantiles)
-		audio2 = index2oneHot(audio2, self.quantiles)
-
-		return torch.tensor(audio1).t().float(), torch.tensor(audio2).t().float(), torch.tensor(int(spkr1 == spkr2))
+		return torch.tensor(features1).t().float(), torch.tensor(features2).t().float(), torch.tensor(int(spkr1 == spkr2))
 
 def getSpeakerPairsDataset(folder):
-	quantiles = 256
-	return {"data" : SpeakerPairsDataset(quantiles, folder)}
+	num_features = 20
+	return {"data" : SpeakerPairsDataset(num_features, folder)}
 
 
 # ---------------------------------------------------------------------------------------------- #

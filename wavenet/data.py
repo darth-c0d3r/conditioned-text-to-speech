@@ -37,6 +37,7 @@ class AudioDataset(Dataset):
 		data = torch.tensor(index2oneHot(indices, self.quantiles))
 		indices = torch.tensor(indices).view(-1)
 
+		# data is simply the one hot version of indices
 		return (data.float(), indices.long())
 
 def getAudioDataset(root_dir, quantiles=256, non_linear=True):

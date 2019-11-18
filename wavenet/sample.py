@@ -17,10 +17,10 @@ def sample(model, output_len, device, init=None):
 	# initialize the waveform as an input audio file
 	if init is not None:
 		_, waveform = wavfile.read(init)
-		_, waveform = quantize_waveform(waveform, model.quantiles)
-		indices = [float(idx) for idx in list(waveform)]
-		waveform = torch.tensor(index2oneHot(waveform, model.quantiles))
+		_, indices = quantize_waveform(waveform, model.quantiles)
+		waveform = torch.tensor(index2oneHot(indices, model.quantiles))
 		waveform = waveform.float().view(1,model.quantiles,-1).to(device)
+		indices = [float(idx) for idx in list(waveform)]
 
 	# iterate for output_len number of steps for sequential generation
 	with torch.no_grad():
@@ -39,7 +39,7 @@ def sample(model, output_len, device, init=None):
 			onehot = onehot.to(device)
 
 			waveform = torch.cat([waveform, onehot], 2)
-
+	print([idx for idx in indices])
 	return index2normalize(np.array(indices), model.quantiles)
 
 if __name__ == "__main__":
@@ -52,4 +52,4 @@ if __name__ == "__main__":
 
 	model = torch.load(folder+modelname, map_location=device).to(device)
 	audio_sample = sample(model, length, device)
-	save_audio(audio_sample, model.sample_rate, "sample8.wav")
+	save_audio(audio_sample, model.sample_rate, "sample10.wav")
