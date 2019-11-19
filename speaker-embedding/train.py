@@ -23,7 +23,7 @@ def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 	plot: bool value to indicate if plotting is to be done
 	input should be of shape (seq_len, batch, input_size)
 	"""
-	i=0
+	
 	# set up the plotting script
 	if plot is True:
 		os.system("python3 -m visdom.server")
@@ -96,7 +96,7 @@ def main():
 	hp.lr = 1e-4
 	hp.epochs = 1000
 	hp.batch_size = 1
-	hp.report = 5
+	hp.report = 1
 
 	# define optimizer, scheduler, and loss function
 	optimizer = optim.Adam(list(embd.parameters())+list(disc.parameters()), lr=hp.lr)

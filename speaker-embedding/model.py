@@ -14,7 +14,7 @@ class SpeakerEmbedding(nn.Module):
 		# --------------------------------#
 		# network parameters
 		self.input_size = input_size # equal to the number of quantiles
-		self.num_layers = 3 # number of stacked LSTM layers
+		self.num_layers = 2 # number of stacked LSTM layers
 		self.hidden_size = 128 # size of hidden state
 		self.embedding_size = 128 # size of speaker representation
 		# --------------------------------#

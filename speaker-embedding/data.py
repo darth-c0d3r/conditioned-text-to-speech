@@ -56,28 +56,38 @@ class SpeakerPairsDataset(Dataset):
 
 		self.speakers = os.listdir(folder)
 		self.num_speakers = len(self.speakers)
-		# self.samples_per_speaker = [len(os.listdir(self.folder + "/" + speaker)) for speaker in self.speakers]
-		self.samples_per_speaker = len(os.listdir(self.folder + "/" + self.speakers[0])) # assuming equal samples
+
+		self.voice_clips = []
+		self.speaker_tags = []
+
+		for tag in range(len(self.speakers)):
+			speaker_folder = self.folder + "/" + self.speakers[tag] + "/"
+			speaker_clips = os.listdir(speaker_folder)
+			for clip in speaker_clips:
+				self.voice_clips.append(speaker_folder+clip)
+				self.speaker_tags.append(tag)
 
 		# this is temporary
 		# finally, we should break each clip into subparts and calculate average of features
+
+
 
 	def __len__(self):
 		# number of possible pairs
 		# = (n*m)*(n*m)
 
-		return (self.num_speakers * self.samples_per_speaker) ** 2
+		return (len(self.voice_clips)) ** 2
 
 	def __getitem__(self, idx):
 		
-		idx1 = idx // (self.num_speakers * self.samples_per_speaker) # [0, n*m)
-		idx2 = idx  % (self.num_speakers * self.samples_per_speaker) # [0, n*m)
+		idx1 = idx // len(self.voice_clips) # [0, n*m)
+		idx2 = idx  % len(self.voice_clips) # [0, n*m)
 
-		spkr1, file1 = idx1 // self.samples_per_speaker, idx1 % self.samples_per_speaker
-		spkr2, file2 = idx2 // self.samples_per_speaker, idx2 % self.samples_per_speaker
+		file1 = self.voice_clips[idx1]
+		file2 = self.voice_clips[idx2]
 
-		file1 = self.folder+"/"+self.speakers[spkr1]+"/"+os.listdir(self.folder+"/"+self.speakers[spkr1])[file1]
-		file2 = self.folder+"/"+self.speakers[spkr2]+"/"+os.listdir(self.folder+"/"+self.speakers[spkr2])[file2]
+		spkr1 = self.speaker_tags[idx1]
+		spkr2 = self.speaker_tags[idx2]
 
 		data1, rate1 = librosa.load(file1)
 		data2, rate2 = librosa.load(file2)
