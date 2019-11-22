@@ -26,6 +26,7 @@ class Wavenet(nn.Module):
 
 		# --------------------------------#
 
+		self.skip_channels = skip_channels # needed to init skip_sum later
 		self.res_channels = res_channels # needed to split for gated conv
 		self.quantiles = quantiles # number of quantizations of data
 		self.sample_rate = None # will be set externally after training
@@ -53,7 +54,13 @@ class Wavenet(nn.Module):
 			self.res_layers.append(nn.ModuleList([gated_conv, res_conv, skip_conv]))
 			
 		# output layer will have a categorical loss
-		self.output_layer1 = nn.Conv1d(num_layers*skip_channels, output_size, 1)
+
+		# self.output_layer1 = nn.Conv1d(num_layers*skip_channels, output_size, 1)
+		self.output_layer1 = nn.Conv1d(skip_channels, output_size, 1)
+		
+		# Uncomment first above if appending skip connection outputs
+		# Uncomment second if summing up skip connection outputs
+
 		self.output_layer2 = nn.Conv1d(output_size, output_size, 1)
 
 	def forward(self, X):
@@ -63,12 +70,13 @@ class Wavenet(nn.Module):
 
 		# a little hack for first step of inference
 		if X.shape[2] == 0:
-			X = torch.zeros((X.shape[0], X.shape[1],1)).to(self.device)
+			X = torch.zeros((X.shape[0], X.shape[1], 1)).to(self.device)
 
 		inp_len = X.shape[2] # get the input seq length
 
 		X = torch.relu(self.causal_conv(X))[:,:,:inp_len] # remove the temporal dependencies
 		skip_outs = []
+		skip_sum = torch.zeros(X.shape[0], self.skip_channels, X.shape[2]).to(self.device)
 
 		for gated_conv, res_conv, skip_conv in self.res_layers:
 
@@ -86,11 +94,17 @@ class Wavenet(nn.Module):
 			X = X + res_conv(dilation_out)
 
 			# add the skip connection output
-			skip_outs.append(skip_conv(dilation_out))
+			skip_out = skip_conv(dilation_out)
+			skip_outs.append(skip_out)
+			skip_sum += skip_out
 
 		# concatenate the skip-connection outputs 
 		# the alternative might be to add them
-		skip_outs = torch.cat(skip_outs,1)
+		# Uncomment the one that you want to use
+		# Remember to change the layer size in __init__ accordingly
+
+		# skip_outs = torch.cat(skip_outs,1)
+		skip_outs = skip_sum
 
 		skip_outs = torch.relu(skip_outs)
 		skip_outs = torch.relu(self.output_layer1(skip_outs))

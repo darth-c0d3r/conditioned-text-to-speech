@@ -159,3 +159,5 @@ def visualize_waveform(waveform=None, wavefile=None):
 	# plot the waveform using pyplot
 	pyplot.plot(range(len(waveform)), waveform)
 	pyplot.show()	
+
+

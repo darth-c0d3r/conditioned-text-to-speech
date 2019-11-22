@@ -5,14 +5,15 @@ from torch import nn, optim
 from torch.autograd import Variable
 
 from util import *
-from sample import sample
-from model import Wavenet
-from data import getAudioDataset
+from model import SpeakerEmbedding
+from model import Discriminator
+from data import getSpeakerPairsDataset
 
-def train(model, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
+def train(embd, disc, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 	"""
 	Parameters:
-	model: The network which is going to be trained
+	embd: The model that gives the speaker embeddings
+	disc: The model that discriminates between 2 embeddings
 	dataset: The dataset on which the model is to be trained
 	loss_fxn: The Loss Function used
 	opt: Optimzer
@@ -20,14 +21,17 @@ def train(model, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 	hyperparams: Object of class Hyperparameter containing hyperparams
 	device: The device being used to train (CPU/GPU)
 	plot: bool value to indicate if plotting is to be done
+	input should be of shape (seq_len, batch, input_size)
 	"""
-
+	
 	# set up the plotting script
 	if plot is True:
 		os.system("python3 -m visdom.server")
-		plotter = VisdomLinePlotter("Wavenet")
+		plotter = VisdomLinePlotter("SpeakerEmbedding")
 
-	model.train()
+	embd.train()
+	disc.train()
+
 
 	# iterate epochs number of times
 	for epoch in range(1, hyperparams.epochs+1):
@@ -38,16 +42,19 @@ def train(model, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 		total_loss = 0.
 
 		# iterate over all batches
-		for data, target in trainloader:
+		for spkr1, spkr2, target in trainloader:
 
-			data, target = Variable(data.to(device)), Variable(target.to(device))
+			spkr1, spkr2, target = Variable(spkr1.to(device)), Variable(spkr2.to(device)), Variable(target.to(device))
 
 			# zero out the gradients
-			model.zero_grad()
+			embd.zero_grad()
+			disc.zero_grad()
 			opt.zero_grad()
 
 			# get the output and loss
-			out = model(data)
+			e1 = embd(spkr1)
+			e2 = embd(spkr2)
+			out = disc(e1, e2)
 			loss = loss_fxn(out, target)
 
 			# get the gradients and update params
@@ -56,10 +63,10 @@ def train(model, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 			scd.step()
 
 			# add loss to the total loss
-			total_loss += len(data)*loss.item()
+			total_loss += spkr1.shape[0]*loss.item()
 
 		# print the loss for epoch i if needed
-		if epoch % hp.report == 0:
+		if epoch % hyperparams.report == 0:
 			print("Epoch %d : Loss = %08f" % (epoch, total_loss / float(len(trainloader))))
 
 			# make the plot if needed
@@ -67,42 +74,41 @@ def train(model, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 				plotter.plot('loss', 'train', 'Training Loss', epoch, total_loss / float(len(trainloader)))
 
 	# return the trained model
-	return model
+	return embd, disc
 
-if __name__ == '__main__':
+def main():
 
 	# get the required dataset
-	folder = "../audio_small/"
-	dataset = getAudioDataset(folder)
+	folder = "../audio/"
+	dataset = getSpeakerPairsDataset(folder)
 
 	# get the device used
-	device = get_device()
+	device = get_device(False)
 
-	# define the model
-	model = Wavenet()
-	model = model.to(device)
-	model.device = device
+	# define the models
+	embd = SpeakerEmbedding(dataset["data"].num_features)
+	disc = Discriminator()
+	embd = embd.to(device)
+	disc = disc.to(device)
 
 	# define hyper-parameters
 	hp = Hyperparameters()
-	hp.lr = 1e-2
-	hp.epochs = 2000
+	hp.lr = 1e-4
+	hp.epochs = 1000
 	hp.batch_size = 1
-	hp.report = 10
+	hp.report = 1
 
 	# define optimizer, scheduler, and loss function
-	optimizer = optim.Adam(model.parameters(), lr=hp.lr)
-	scheduler = optim.lr_scheduler.StepLR(optimizer, hp.epochs//4, gamma=0.25)
+	optimizer = optim.Adam(list(embd.parameters())+list(disc.parameters()), lr=hp.lr)
+	scheduler = optim.lr_scheduler.StepLR(optimizer, hp.epochs//4, gamma=1)
 	loss_fxn = nn.CrossEntropyLoss()
 
 	# call the train function
 	plot = False # Use Visdom to plot the Training Loss Curve
-	model = train(model, dataset["data"], loss_fxn, optimizer, scheduler, hp, device, plot)
+	embd, _ = train(embd, disc, dataset["data"], loss_fxn, optimizer, scheduler, hp, device, plot)
+	print("Training over.")
+	# save the embedding model
+	save_model(embd, "embd1.pt")
 
-	# set the sampe_rate and save the model
-	model.sample_rate = dataset["rate"]
-	save_model(model, "wavenet1.pt")
-
-	# Free Samples (with the training) [Sorry xD]
-	audio_sample = sample(model, dataset["data"][0][0].shape[1], device)
-	save_audio(audio_sample, model.sample_rate, "sample1.wav")
+if __name__=='__main__':
+	main()
