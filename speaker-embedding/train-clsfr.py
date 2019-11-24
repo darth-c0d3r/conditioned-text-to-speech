@@ -77,17 +77,20 @@ def train(embd, clsr, dataset, loss_fxn, opt, scd, hyperparams, device, plot):
 			if plot is True:
 				plotter.plot('loss', 'train', 'Training Loss', epoch, total_loss / float(len(trainloader)))
 
+		if epoch % 1 == 0:
+			save_model(embd, "embd_clsr_%d.pt"%(epoch))
+
 	# return the trained model
 	return embd, clsr
 
 def main():
 
 	# get the required dataset
-	folder = "../audio/"
+	folder = "../libri-speech"
 	dataset = getSpeakerDataset(folder)
 
 	# get the device used
-	device = get_device(True)
+	device = get_device(False)
 
 	# define the models
 	embd = SpeakerEmbedding(dataset["data"].num_features)
@@ -112,7 +115,7 @@ def main():
 	embd, _ = train(embd, clsr, dataset["data"], loss_fxn, optimizer, scheduler, hp, device, plot)
 	print("Training over.")
 	# save the embedding model
-	save_model(embd, "embd_clsr.pt")
+	save_model(embd, "embd_clsr2.pt")
 
 if __name__=='__main__':
 	main()
