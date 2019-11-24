@@ -79,3 +79,43 @@ class Discriminator(nn.Module):
 
 		return V
 
+class Classifier(nn.Module):
+	"""
+	Class for a simple discriminator.
+	Takes in 2 inputs and checks if they're from same domain.
+
+	"""
+
+	def __init__(self, output_size):
+
+		super(Classifier, self).__init__()
+
+		# --------------------------------#
+		# network parameters
+		self.embedding_size = 128 # embedding sizes
+		self.output_size = output_size
+		fc = [64] # dimensions of fc hidden layers
+		# --------------------------------#
+		
+		fc = [self.embedding_size] + fc
+
+		# initialize the empty list of module list
+		self.fc_layers = nn.ModuleList()
+
+		for i in range(len(fc)-1):
+			self.fc_layers.append(nn.Linear(fc[i], fc[i-1]))
+
+		# output layer
+		self.output_layer = nn.Linear(fc[-1], self.output_size)
+
+	def forward(self, V):
+		# V is a speaker embedding
+		# V.shape = [batch-size, self.embedding_size]
+
+		# iterate over all fully connected layers
+		for fc_layer in self.fc_layers:
+			V = torch.relu(fc_layer(V))
+
+		V = self.output_layer(V)
+
+		return V

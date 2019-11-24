@@ -37,5 +37,5 @@ def visualize_embedding(model, folder):
 	return
 
 if __name__ == '__main__':
-	model = torch.load("saved_models/embd1.pt")
+	model = torch.load("saved_models/embd_clsr.pt")
 	visualize_embedding(model, "../audio/")

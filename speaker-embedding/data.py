@@ -15,8 +15,16 @@ class SpeakerDataset(Dataset):
 
 		self.speakers = os.listdir(folder)
 		self.num_speakers = len(self.speakers)
-		# self.samples_per_speaker = [len(os.listdir(self.folder + "/" + speaker)) for speaker in self.speakers]
-		self.samples_per_speaker = len(os.listdir(self.folder + "/" + self.speakers[0])) # assuming equal samples
+
+		self.voice_clips = []
+		self.speaker_tags = []
+
+		for tag in range(len(self.speakers)):
+			speaker_folder = self.folder + "/" + self.speakers[tag] + "/"
+			speaker_clips = os.listdir(speaker_folder)
+			for clip in speaker_clips:
+				self.voice_clips.append(speaker_folder+clip)
+				self.speaker_tags.append(tag)
 
 		# this is temporary
 		# finally, we should break each clip into subparts and calculate average of features
@@ -24,19 +32,22 @@ class SpeakerDataset(Dataset):
 	def __len__(self):
 		# number of possible clips
 		# = (n*m)
-		return self.num_speakers * self.samples_per_speaker
 
-	def __getitem__(self, idx):
+		return len(self.voice_clips)
+
+	def __getitem__(self, idx): # do this
 		
-		spkr, file = idx // self.samples_per_speaker, idx % self.samples_per_speaker
-		file = self.folder+"/"+self.speakers[spkr]+"/"+os.listdir(self.folder+"/"+self.speakers[spkr])[file]
+		file = self.voice_clips[idx]
+		spkr = self.speaker_tags[idx]
 
-		rate, data = librosa.load(file)
-		features = librosa.features.mfcc(data, rate, n_mfcc=self.num_features)
+		data, rate = librosa.load(file)
+
+		features = librosa.feature.mfcc(data, rate, n_mfcc=self.num_features)
+		# print(torch.tensor(features).shape)
 
 		# visualize_waveform(waveform=data)
 
-		return torch.tensor(features).t(), torch.tensor(spkr)
+		return torch.tensor(features).t().float(), torch.tensor(spkr)
 
 def getSpeakerDataset(folder):
 	num_features = 20
